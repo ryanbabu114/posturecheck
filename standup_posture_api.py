@@ -1,4 +1,3 @@
-import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import cv2
@@ -8,16 +7,30 @@ import mediapipe as mp
 app = Flask(__name__)
 CORS(app)
 
+# Initialize Mediapipe Pose
 mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(
-    min_detection_confidence=0.7,  # Increase threshold to ignore bad detections
-    min_tracking_confidence=0.7
-)
+pose = mp_pose.Pose()
+mp_drawing = mp.solutions.drawing_utils
 
+def check_posture(landmarks):
+    left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value]
+    right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value]
+    left_hip = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value]
+    right_hip = landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value]
 
-@app.route('/')
-def home():
-    return "Posture Correction API is Live!"
+    shoulder_slope = abs(left_shoulder.y - right_shoulder.y)
+    hip_slope = abs(left_hip.y - right_hip.y)
+
+    correction_tips = []
+    if shoulder_slope > 0.02:
+        correction_tips.append("Keep shoulders level.")
+    if hip_slope > 0.02:
+        correction_tips.append("Align hips evenly.")
+
+    if correction_tips:
+        return "Wrong Posture", correction_tips
+    else:
+        return "Correct Posture", ["Great job!"]
 
 @app.route('/posture-correction', methods=['POST'])
 def posture_correction():
@@ -26,24 +39,18 @@ def posture_correction():
         image_np = np.frombuffer(file.read(), np.uint8)
         frame = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
-        # ✅ Fix 1: Ensure Image Resolution is Large Enough
-        frame = cv2.resize(frame, (320, 240))  # Increase resolution
-
-        # ✅ Fix 2: Convert to RGB Before Processing
+        # Convert to RGB and process with Mediapipe
         image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(image_rgb)
 
-        # ✅ Fix 3: Debugging - Print Pose Landmarks
         if results.pose_landmarks:
-            print("Pose landmarks detected:", results.pose_landmarks)
-            return jsonify({"status": "success", "message": "Posture detected"})
+            posture, corrections = check_posture(results.pose_landmarks.landmark)
+            return jsonify({"status": "success", "posture": posture, "corrections": corrections})
         else:
-            print("⚠ No Pose Detected!")
-            return jsonify({"status": "error", "message": "No posture detected. Ensure full body is visible and lighting is good."})
+            return jsonify({"status": "error", "message": "No posture detected"})
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

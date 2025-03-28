@@ -1,7 +1,6 @@
 flask
 flask-cors
-opencv-python-headless
+opencv-python
 mediapipe
 numpy
 gunicorn
-tflite-runtime  # Optimized TensorFlow Lite
