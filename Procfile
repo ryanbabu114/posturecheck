@@ -1,1 +1,1 @@
-web: gunicorn standup_posture_api:app
+web: gunicorn posture_api:app
