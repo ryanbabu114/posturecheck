@@ -9,7 +9,11 @@ app = Flask(__name__)
 CORS(app)
 
 mp_pose = mp.solutions.pose
-pose = mp_pose.Pose()
+pose = mp_pose.Pose(
+    min_detection_confidence=0.7,  # Increase threshold to ignore bad detections
+    min_tracking_confidence=0.7
+)
+
 
 @app.route('/')
 def home():
@@ -23,7 +27,7 @@ def posture_correction():
         frame = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
         # ✅ Fix 1: Ensure Image Resolution is Large Enough
-        frame = cv2.resize(frame, (640, 480))  # Increase resolution
+        frame = cv2.resize(frame, (320, 240))  # Increase resolution
 
         # ✅ Fix 2: Convert to RGB Before Processing
         image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

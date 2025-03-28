@@ -1,7 +1,7 @@
 flask
 flask-cors
-opencv-python-headless  # Use headless version to save RAM
+opencv-python-headless
 mediapipe
 numpy
 gunicorn
-tflite-runtime  # Use TensorFlow Lite instead of full TensorFlow
+tflite-runtime  # Optimized TensorFlow Lite
