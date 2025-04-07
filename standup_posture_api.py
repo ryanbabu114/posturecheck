@@ -47,7 +47,7 @@ def check_posture(landmarks, exercise):
         if exercise == "Squat":
             knee_angle = calculate_angle(left_hip, left_knee, left_ankle)
             if knee_angle > 100:
-                correction_tips.append("Bend knees more.")
+                correction_tips.append("Bend the knees more.")
             elif knee_angle < 60:
                 correction_tips.append("Do not squat too low.")
 
